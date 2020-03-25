@@ -1,0 +1,62 @@
+# Default values for healthbird.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+streamer:
+  name: streamer
+  replicaCount: 1
+
+  image:
+    repository: josibake/twitter-streamer
+    tag: latest
+    pullPolicy: Always
+  
+  env:
+    - name: PROCESSING_SCRIPT
+      value: twitter-to-redis
+    - name: TWITTER_CONSUMER_KEY
+      value: A0IRhUE9AlPbn879fxpTTIuve
+    - name: TWITTER_CONSUMER_SECRET
+      value: pYJPpjolG4UyQe7Qqvh82Z9RnLz8SJ2zIRLt4d5e0T6UH07FLe
+    - name: TWITTER_ACCESS_KEY
+      value: 707671235-x7bKn2CGJmaHMdTcwzco6kgOXyJfRj6DMRTKoFij
+    - name: TWITTER_ACCESS_SECRET
+      value: sKWR6KNCSI3X2zBPXz8ne76WZrayUZsOdWlDhySOtTl3B
+
+worker:
+  name: worker
+  replicaCount: 1
+
+  image:
+    repository: josibake/twitter-streamer
+    tag: latest
+    pullPolicy: Always
+
+  env:
+    - name: PROCESSING_SCRIPT
+      value: redis-to-elastic
+
+redis:
+  name: redis-master
+  port: 6379
+  memory: 100Mi
+  cpu: 100m
+
+elasticsearch:
+  name: elasticsearch-master
+  port: 9200
+  # Shrink default JVM heap.
+  esJavaOpts: "-Xmx128m -Xms128m"
+
+  # Allocate smaller chunks of memory per pod.
+  resources:
+    requests:
+      cpu: "100m"
+      memory: "512M"
+    limits:
+      cpu: "1000m"
+      memory: "512M"
+
+kibana:
+  service:
+    type: LoadBalancer

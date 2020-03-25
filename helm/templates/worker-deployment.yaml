@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.worker.name }}
+  labels:
+{{ include "twitter-streamer.labels" . | indent 4 }}
+spec:
+  replicas: {{ .Values.worker.replicaCount }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "twitter-streamer.name" . }}
+      app.kubernetes.io/instance: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ include "twitter-streamer.name" . }}
+        app.kubernetes.io/instance: {{ .Release.Name }}
+    spec:
+      containers:
+        - name: {{ .Values.worker.name }}
+          image: "{{ .Values.worker.image.repository }}:{{ .Values.worker.image.tag }}"
+          imagePullPolicy: {{ .Values.worker.image.pullPolicy }}
+          env:
+            - name: REDIS_HOST
+              value: {{ .Values.redis.name }}
+            - name: REDIS_PORT
+              value: "{{ .Values.redis.port }}"
+            - name: ELASTICSEARCH_HOST
+              value: {{ .Values.elasticsearch.name }}
+            - name: ELASTICSEARCH_PORT
+              value: "{{ .Values.elasticsearch.port }}"
+            {{- .Values.worker.env | toYaml | trimSuffix "\n" | nindent 12 }}

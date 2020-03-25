@@ -1,0 +1,28 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.streamer.name }}
+  labels:
+{{ include "twitter-streamer.labels" . | indent 4 }}
+spec:
+  replicas: {{ .Values.streamer.replicaCount }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "twitter-streamer.name" . }}
+      app.kubernetes.io/instance: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ include "twitter-streamer.name" . }}
+        app.kubernetes.io/instance: {{ .Release.Name }}
+    spec:
+      containers:
+        - name: {{ .Values.streamer.name }}
+          image: "{{ .Values.streamer.image.repository }}:{{ .Values.streamer.image.tag }}"
+          imagePullPolicy: {{ .Values.streamer.image.pullPolicy }}
+          env:
+            - name: REDIS_HOST
+              value: {{ .Values.redis.name }}
+            - name: REDIS_PORT
+              value: "{{ .Values.redis.port }}"
+            {{- .Values.streamer.env | toYaml | trimSuffix "\n" | nindent 12 }}

@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.redis.name }}
+  labels:
+{{ include "twitter-streamer.labels" . | indent 4 }}
+spec:
+  ports:
+    - port: {{ .Values.redis.port }}
+      targetPort: {{ .Values.redis.port }}
+  selector:
+    app.kubernetes.io/name: {{ include "twitter-streamer.name" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}

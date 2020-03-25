@@ -1,0 +1,27 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.redis.name }}
+  labels:
+{{ include "twitter-streamer.labels" . | indent 4 }}
+spec:
+  replicas: {{ .Values.streamer.replicaCount }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "twitter-streamer.name" . }}
+      app.kubernetes.io/instance: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ include "twitter-streamer.name" . }}
+        app.kubernetes.io/instance: {{ .Release.Name }}
+    spec:
+      containers:
+      - name: master
+        image: redis
+        resources:
+        requests:
+          cpu: {{ .Values.redis.cpu }}
+          memory: {{ .Values.redis.memory }}
+        ports:
+        - containerPort: {{ .Values.redis.port }}
