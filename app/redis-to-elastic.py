@@ -99,15 +99,18 @@ def process_queue(queue):
             raise
 
 def update_index(es, index):
-    if es.indices.exists(index=index):
+    if not es.indices.exists(index=index):
         mappings = {
-            "properties": {
-                "location": {
-                    "type": "geo_point"
+            "mappings": {
+                "properties": {
+                    "location": {
+                        "type": "geo_point"
+                    }
                 }
             }
         }
         es.indices.create(index=index, body=mappings)
+        logging.info(f"Created index: {index}")
 
 # setup logging, probably should move this out at some point
 logging.basicConfig(format='%(asctime)s - %(message)s')
@@ -126,7 +129,7 @@ es_header = [{
 # use the bulk load to ES and a generator on redis
 es = Elasticsearch(es_header)
 
-index = "twitter-stream-{datetime.now().strftime('%Y-%m-%d')}"
+index = f"twitter-stream-{datetime.now().strftime('%Y-%m-%d')}"
 update_index(es, index)
 
 while True:
@@ -134,14 +137,13 @@ while True:
     # keep running, running, running 
     k = ({
         "_index": index,
-        "_type" : "tweets",
         "_id"   : idx,
         "_source": doc,
     } for idx, doc in process_queue(r))
 
     helpers.bulk(es, k)
     
-    new_index = "twitter-stream-{datetime.now().strftime('%Y-%m-%d')}"
+    new_index = f"twitter-stream-{datetime.now().strftime('%Y-%m-%d')}"
     if new_index != index:
         index = new_index
         update_index(es, index)
